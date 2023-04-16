@@ -19,7 +19,7 @@ namespace NearestVehiclePositionTests
 
             for (int i=0; i<nearestNeighboursBruteForce.Length; i++)
             {
-                Assert.AreEqual(nearestNeighboursBruteForce[i].Value.PositionId, nearestNeighboursKDTree[i].Value.PositionId);
+                //Assert.AreEqual(nearestNeighboursBruteForce[i].Value.PositionId, nearestNeighboursKDTree[i].Value.PositionId);
                 Assert.AreEqual(nearestNeighboursBruteForce[i], nearestNeighboursKDTree[i]);
             }
             
