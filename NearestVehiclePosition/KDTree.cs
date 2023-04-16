@@ -20,11 +20,11 @@ namespace NearestVehiclePosition
         // VehiclePosition objects directly which slows things down
 
         // Store the indices
-        public int[] indices;
+        private int[] indices;
         // Store the latitudes
-        public float[] lats;
+        private float[] lats;
         // Store the longitudes
-        public float[] lons;
+        private float[] lons;
 
 
         public KDTree(List<VehiclePosition> items)
