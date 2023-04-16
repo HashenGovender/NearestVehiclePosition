@@ -1,4 +1,8 @@
 ﻿using System.Diagnostics;
+using Microsoft.Extensions.Configuration;
+using NearestVehiclePosition.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace NearestVehiclePosition
 {
@@ -6,23 +10,31 @@ namespace NearestVehiclePosition
     {
         static void Main(string[] args)
         {
-            const string dataFileName = "VehiclePositions.dat";
+            //----------------------------------------------------------------
+            // SETUP DATA FILE PATH AND POINTS TO QUERY FROM appSettings.json 
+            //----------------------------------------------------------------
+            IConfiguration Config = new ConfigurationBuilder()
+                    .AddJsonFile("appSettings.json")
+                    .Build();
 
+            string dataFileName = Config.GetSection("DataFilePath").Value;
+            var pointsToQuery = Config.GetSection("PointsToQuery").Get<Coordinate[]>();
+            
+            
             //------------------------------
             // SOLVING BY USING BRUTE FORCE 
-            //-------------------------------
-
+            //------------------------------
             Stopwatch timer = Stopwatch.StartNew();
             Console.WriteLine("#########################################################");
             Console.WriteLine("################# Solve With Brute Force ################");
             Console.WriteLine("#########################################################");
             Console.WriteLine();
 
-            var nearestPositions = SolveWithBruteForce.Solve(PointsToQuery.Points, dataFileName);
-            DisplayNearestNeighbours(nearestPositions, PointsToQuery.Points);
+            var nearestPositionsBF = SolveWithBruteForce.Solve(pointsToQuery, dataFileName);
+            DisplayNearestNeighbours(nearestPositionsBF, pointsToQuery);
 
             Console.WriteLine();
-            Console.WriteLine("File Read / Parse Time (ms): " + SolveWithBruteForce.FileReadParseTime);
+            Console.WriteLine("Data File Read / Parse Time (ms): " + SolveWithBruteForce.FileReadParseTime);
             Console.WriteLine("Find Nearest Positions Time (ms): " + SolveWithBruteForce.FindNearestPositionsTime);
             Console.WriteLine();
             Console.WriteLine();
@@ -32,33 +44,33 @@ namespace NearestVehiclePosition
             //--------------------------
             // SOLVING BY USING KD-TREE 
             //--------------------------
-
             Console.WriteLine("#########################################################");
             Console.WriteLine("################## Solve With KD-Tree ###################");
             Console.WriteLine("#########################################################");
             Console.WriteLine();
 
-            nearestPositions = SolveWithKDTree.Solve(PointsToQuery.Points, dataFileName);
-            DisplayNearestNeighbours(nearestPositions, PointsToQuery.Points);
+            var nearestPositionsKD = SolveWithKDTree.Solve(pointsToQuery, dataFileName);
+            DisplayNearestNeighbours(nearestPositionsKD, pointsToQuery);
 
             Console.WriteLine();
-            Console.WriteLine("File Read / Parse Time (ms): " + SolveWithKDTree.FileReadParseTime);
+            Console.WriteLine("Data File Read / Parse Time (ms): " + SolveWithKDTree.FileReadParseTime);
             Console.WriteLine("KD-Tree Build Time (ms): " + SolveWithKDTree.TreeBuildTime);
             Console.WriteLine("Find Nearest Positions Time (ms): " + SolveWithKDTree.FindNearestPositionsTime);
             Console.WriteLine();
             Console.WriteLine();
 
+            Console.ReadLine();
         }
 
 
-        static void DisplayNearestNeighbours(VehiclePosition?[] nearestVehiclePositions, float[,] pointsToQuery)
+        //-----------------------------------
+        // Display nearest neighbour results
+        //-----------------------------------
+        static void DisplayNearestNeighbours(VehiclePosition[] nearestVehiclePositions, Coordinate[] pointsToQuery)
         {
-            for (int i = 0; i < pointsToQuery.GetLength(0); i++)
+            for (int i = 0; i < pointsToQuery.Length; i++)
             {
-                if (nearestVehiclePositions[i].HasValue)
-                {
-                    Console.WriteLine($"Nearest position to ({pointsToQuery[i, 0]}, {pointsToQuery[i, 1]}) is: \n[PositionId:{nearestVehiclePositions[i].Value.PositionId}, Latitude:{nearestVehiclePositions[i].Value.Latitude}, Longitude:{nearestVehiclePositions[i].Value.Longitude}, Registration:{nearestVehiclePositions[i].Value.VehicleRegistration}, DateTime:{ DateTimeOffset.FromUnixTimeSeconds((long)nearestVehiclePositions[i].Value.RecordedTimeUTC).LocalDateTime}]\n");
-                }          
+               Console.WriteLine($"Nearest position to ({pointsToQuery[i].Lat}, {pointsToQuery[i].Lon}) is: \n[PositionId:{nearestVehiclePositions[i].PositionId}, Latitude:{nearestVehiclePositions[i].Latitude}, Longitude:{nearestVehiclePositions[i].Longitude}, Registration:{nearestVehiclePositions[i].VehicleRegistration}, DateTime:{ DateTimeOffset.FromUnixTimeSeconds((long)nearestVehiclePositions[i].RecordedTimeUTC).LocalDateTime}]\n");
             }
         }
     }

@@ -5,32 +5,35 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using NearestVehiclePosition.Models;
 
 namespace NearestVehiclePosition
 {
     //--------------------------------------------------------------------------------------------------------
-    // Provides functionality to build a 2 dimensional KD-Tree and find the nearest neighbour to a gicen point
+    // Provides functionality to build a 2 dimensional KD-Tree and find the nearest neighbour to a given point
+    // An explanation of KD-Trees can be found here: https://en.wikipedia.org/wiki/K-d_tree
     //--------------------------------------------------------------------------------------------------------
     public class KDTree
     {
-        // Store the indices 
+        // To optimise the build time of the tree I am storing the the vehicle position indices, latitudes and longitudes in 
+        // flat primitive arrays which are used in the sorting algorithm to build the tree instead of working with the
+        // VehiclePosition objects directly which slows things down
+
+        // Store the indices
         public int[] indices;
-        // Store the Latitudes
+        // Store the latitudes
         public float[] lats;
-        // Store the Longitudes
+        // Store the longitudes
         public float[] lons;
-        // Store the position objects to reference
-        public VehiclePosition[] items;
 
 
-        public KDTree(VehiclePosition[] items)
+        public KDTree(List<VehiclePosition> items)
         {
-            this.items = items;
+            int len = items.Count;
+            lats = new float[len];
+            lons = new float[len];
 
-            lats = new float[items.Length];
-            lons = new float[items.Length];
-
-            indices = new int[items.Length];
+            indices = new int[len];
             for (int ind = 0; ind < indices.Length; ind++)
             {
                 indices[ind] = ind;
@@ -43,6 +46,7 @@ namespace NearestVehiclePosition
         }
 
 
+        // Sort the elements to form a KD-Tree 
         private void SortKDTree(int left, int right, int depth)
         {
             if (right - left <= 0) return;
@@ -58,12 +62,14 @@ namespace NearestVehiclePosition
 
         //-------------------------------------------------------------------------------------------------------------------
         // Using Floyd-Rivest Select algorithm since it performs faster in this case than the regular Quick Select algorithm
-        // Quick Select algorithm is documented here: https://en.wikipedia.org/wiki/Floyd%E2%80%93Rivest_algorithm
+        // Uses sampling to partition the array into 3 sets to find the median element
+        // Floyd-Rivest Select algorithm is documented here: https://en.wikipedia.org/wiki/Floyd%E2%80%93Rivest_algorithm
         //-------------------------------------------------------------------------------------------------------------------
         private void QuickSelectFloydRivest(int middle, int left, int right, int sortingDimension)
         {
             while (right > left)
             {
+                // default constants used as prescribed by the algorithm
                 if (right - left > 600)
                 {
                     var n = right - left + 1;
@@ -104,7 +110,7 @@ namespace NearestVehiclePosition
             }
         }
 
-
+        // Swap the elements of all 3 arrays to keep them in sync with each other
         private void SwapItem(int i, int j)
         {
             Swap(indices, i, j);
@@ -121,30 +127,28 @@ namespace NearestVehiclePosition
 
 
 
-        //-----------------------------------------------------------------------------------------------------
-        // Find the nearest position to the given latitude and longitude by traversing the KD-Tree recursively
-        //-----------------------------------------------------------------------------------------------------
 
         // Keep track of the array index of the nearest point found so far
         private int bestNeighbourInd = -1;
         // Keep track of the distance to nearest point found so far
         private float bestDistance = 0;
 
-        public VehiclePosition? FindNearestPosition(float lat, float lon)
+        // Return the index of the nearest VehiclePosition
+        public int FindNearestPosition(float lat, float lon)
         {
             bestNeighbourInd = -1;
             bestDistance = 0;
 
             NearestNeighbour(0, indices.Length - 1, lat, lon);
 
-            if (bestNeighbourInd >= 0)
-            {
-                return items[indices[bestNeighbourInd]];
-            }
-
-            return null;
+            return indices[bestNeighbourInd];
         }
 
+        //------------------------------------------------------------------------------------------------------
+        // Find the nearest position to the target latitude and longitude by traversing the KD-Tree recursively
+        // Similar to binary tree traversal, alternating the comparision of lat/lon at each depth to check
+        // whether to proceed left or right
+        //------------------------------------------------------------------------------------------------------
         private void NearestNeighbour(int left, int right, float targetLat, float targetLon, int axis = 0)
         {
             if (right - left < 0)

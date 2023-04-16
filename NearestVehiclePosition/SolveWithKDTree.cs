@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using NearestVehiclePosition.Models;
 
 namespace NearestVehiclePosition
 {
@@ -15,36 +16,42 @@ namespace NearestVehiclePosition
         public static long TreeBuildTime = 0;
         public static long FindNearestPositionsTime = 0;
 
-        public static VehiclePosition?[] Solve(float[,] pointsToQuery, string dataFileName)
+        //--------------------------------------
+        // Solve by using 2 dimensional KD-Tree
+        //--------------------------------------
+        public static VehiclePosition[] Solve(Coordinate[] pointsToQuery, string dataFileName)
         {
+            // setup timer to measure execution time
             Stopwatch timer = Stopwatch.StartNew();
 
-            int pointsToQueryLength = pointsToQuery.GetLength(0);
             int PositionId;
             string VehicleRegistration;
             float Latitude;
             float Longitude;
             ulong RecordedTimeUTC;
 
-            float[] minDist = new float[pointsToQueryLength];
-            for (int i = 0; i < pointsToQueryLength; i++)
+            float[] minDist = new float[pointsToQuery.Length];
+            for (int i = 0; i < pointsToQuery.Length; i++)
             {
                 minDist[i] = float.MaxValue;
             }
 
             List<VehiclePosition> vehPositions = new List<VehiclePosition>();
-            VehiclePosition?[] nearestVehiclePositions = new VehiclePosition?[pointsToQueryLength];
+            VehiclePosition[] nearestVehiclePositions = new VehiclePosition[pointsToQuery.Length];
 
+            // Read all file bytes into byte array - this is faster than using BinaryReader class to read values sequentially
             var fileBytes = File.ReadAllBytes(dataFileName);
             int curByteInd = 0;
             int curVehPosInd = 0;
             int byteInd;
 
+            // iterate through the file bytes and read / parse the values according to field data type sizes
             while (curByteInd < fileBytes.Length)
             {
                 PositionId = BitConverter.ToInt32(fileBytes, curByteInd);
                 curByteInd += 4;
 
+                // read null terminated string representing the Vehicle Registration
                 byteInd = curByteInd;
                 while (fileBytes[curByteInd] != 0)
                 {
@@ -70,15 +77,17 @@ namespace NearestVehiclePosition
             timer.Reset();
             timer.Start();
 
-            var kdTree = new KDTree(vehPositions.ToArray());
+            // instantiate an object of KDTree class - pass all the vehicle positions read from file to build the tree
+            var kdTree = new KDTree(vehPositions);
 
             TreeBuildTime = timer.ElapsedMilliseconds;
             timer.Reset();
             timer.Start();
 
-            for (int i = 0; i < pointsToQueryLength; i++)
+            for (int i = 0; i < pointsToQuery.Length; i++)
             {
-                nearestVehiclePositions[i] = kdTree.FindNearestPosition(pointsToQuery[i, 0], pointsToQuery[i, 1]);
+                // call FindNearestPosition method to get the nearest neighbour for each query point
+                nearestVehiclePositions[i] = vehPositions[kdTree.FindNearestPosition(pointsToQuery[i].Lat, pointsToQuery[i].Lon)];
             }
 
             FindNearestPositionsTime = timer.ElapsedMilliseconds;

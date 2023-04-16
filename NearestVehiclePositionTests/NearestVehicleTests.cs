@@ -1,29 +1,31 @@
+using Microsoft.Extensions.Configuration;
 using NearestVehiclePosition;
-using static System.Net.Mime.MediaTypeNames;
+using NearestVehiclePosition.Models;
 
 namespace NearestVehiclePositionTests
 {
     [TestClass]
     public class NearestVehicleTests
     {
-        const string dataFileName = "VehiclePositions.dat";
-
         [TestMethod]
         public void Test_Solve_With_Brute_Force_Matches_Solve_With_KDTree()
         {
+            IConfiguration Config = new ConfigurationBuilder()
+                    .AddJsonFile("appSettings.json")
+                    .Build();
 
-            var nearestNeighboursBruteForce = SolveWithBruteForce.Solve(PointsToQuery.Points, dataFileName);
-            var nearestNeighboursKDTree = SolveWithKDTree.Solve(PointsToQuery.Points, dataFileName);
+            string dataFileName = Config.GetSection("DataFilePath").Value;
+            var pointsToQuery = Config.GetSection("PointsToQuery").Get<Coordinate[]>();
+
+            var nearestNeighboursBruteForce = SolveWithBruteForce.Solve(pointsToQuery, dataFileName);
+            var nearestNeighboursKDTree = SolveWithKDTree.Solve(pointsToQuery, dataFileName);
 
             Assert.AreEqual(nearestNeighboursBruteForce.Length, nearestNeighboursKDTree.Length);
 
             for (int i=0; i<nearestNeighboursBruteForce.Length; i++)
             {
-                //Assert.AreEqual(nearestNeighboursBruteForce[i].Value.PositionId, nearestNeighboursKDTree[i].Value.PositionId);
                 Assert.AreEqual(nearestNeighboursBruteForce[i], nearestNeighboursKDTree[i]);
             }
-            
-            
         }
     }
 }
