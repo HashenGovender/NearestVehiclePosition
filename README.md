@@ -1,3 +1,5 @@
-# NearestVehiclePosition
+# Nearest Vehicle Position
 
-Read a binary file containing vehicle positions and find the closest position to a given target point
+Read a binary file containing vehicle position data and find the closest positions to given target points. 
+
+Edit the appSettings.json file to specify the data file path and query points. 
