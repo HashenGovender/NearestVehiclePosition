@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
 using Microsoft.Extensions.Configuration;
 using NearestVehiclePosition.Models;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace NearestVehiclePosition
 {
