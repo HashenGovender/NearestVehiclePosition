@@ -17,12 +17,11 @@ namespace NearestVehiclePosition
 
             string dataFileName = Config.GetSection("DataFilePath").Value;
             var pointsToQuery = Config.GetSection("PointsToQuery").Get<Coordinate[]>();
-            
-            
+
+
             //------------------------------
             // SOLVING BY USING BRUTE FORCE 
             //------------------------------
-            Stopwatch timer = Stopwatch.StartNew();
             Console.WriteLine("#########################################################");
             Console.WriteLine("################# Solve With Brute Force ################");
             Console.WriteLine("#########################################################");
@@ -39,23 +38,42 @@ namespace NearestVehiclePosition
             Console.WriteLine();
 
 
-            //--------------------------
-            // SOLVING BY USING KD-TREE 
-            //--------------------------
+            //----------------------------
+            // SOLVING BY USING SEGMENTS 
+            //----------------------------
             Console.WriteLine("#########################################################");
-            Console.WriteLine("################## Solve With KD-Tree ###################");
+            Console.WriteLine("################ Solve With Segmentation ################");
             Console.WriteLine("#########################################################");
             Console.WriteLine();
 
-            var nearestPositionsKD = SolveWithKDTree.Solve(pointsToQuery, dataFileName);
-            DisplayNearestNeighbours(nearestPositionsKD, pointsToQuery);
+            var nearestPositionsSG = SolveWithSegmentation.Solve(pointsToQuery, dataFileName);
+            DisplayNearestNeighbours(nearestPositionsSG, pointsToQuery);
 
             Console.WriteLine();
-            Console.WriteLine("Data File Read / Parse Time (ms): " + SolveWithKDTree.FileReadParseTime);
-            Console.WriteLine("KD-Tree Build Time (ms): " + SolveWithKDTree.TreeBuildTime);
-            Console.WriteLine("Find Nearest Positions Time (ms): " + SolveWithKDTree.FindNearestPositionsTime);
+            Console.WriteLine("Data File Read / Parse Time (ms): " + SolveWithSegmentation.FileReadParseTime);
+            Console.WriteLine("Find Nearest Positions Time (ms): " + SolveWithSegmentation.FindNearestPositionsTime);
             Console.WriteLine();
             Console.WriteLine();
+            Console.WriteLine();
+
+
+            ////--------------------------
+            //// SOLVING BY USING KD-TREE 
+            ////--------------------------
+            //Console.WriteLine("#########################################################");
+            //Console.WriteLine("################## Solve With KD-Tree ###################");
+            //Console.WriteLine("#########################################################");
+            //Console.WriteLine();
+
+            //var nearestPositionsKD = SolveWithKDTree.Solve(pointsToQuery, dataFileName);
+            //DisplayNearestNeighbours(nearestPositionsKD, pointsToQuery);
+
+            //Console.WriteLine();
+            //Console.WriteLine("Data File Read / Parse Time (ms): " + SolveWithKDTree.FileReadParseTime);
+            //Console.WriteLine("KD-Tree Build Time (ms): " + SolveWithKDTree.TreeBuildTime);
+            //Console.WriteLine("Find Nearest Positions Time (ms): " + SolveWithKDTree.FindNearestPositionsTime);
+            //Console.WriteLine();
+            //Console.WriteLine();
 
             Console.ReadLine();
         }
